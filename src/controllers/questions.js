@@ -1,5 +1,6 @@
 import express from 'express';
 import Question from '../models/questionModel.js'
+import { shuffleArray } from '../utils/helper.js'
 
 
 export const getQuestion = async (req, res) => {
@@ -132,6 +133,58 @@ export const addQuestion = async (req, res) => {
       }
 }   
 
+
+export const filterQuestion = async (req, res) => {
+  const criteriaArray = req.body.criteria;
+  const subject = req.body.subject
+  console.log("\ncriteriaArray:", criteriaArray);
+  // Fetch all questions from the database
+  Question.find({subject})
+    .then((allQuestions) => {
+      const view = shuffleArray([...allQuestions]); // Create a copy of all questions as the view
+      const matchedQuestions = [];
+      const unmatchedCriteria = [];
+      console.log("view",view);
+      // Iterate through the criteria array
+      for (const criterion of criteriaArray) {
+        const { section, mark, Dlevel, Clevel } = criterion;
+
+        // Find the first question that matches the criterion in the view
+        const matchedQuestion = view.find((question) => {
+          return (
+            question.section === section &&
+            question.mark == mark &&
+            question.Dlevel === Dlevel &&
+            question.Clevel === Clevel
+          );
+        });
+
+        if (matchedQuestion) {
+          matchedQuestions.push(matchedQuestion);
+          // Remove the matched question from the view
+          const index = view.indexOf(matchedQuestion);
+          if (index > -1) {
+            view.splice(index, 1);
+          }
+        } else {
+          unmatchedCriteria.push(criterion);
+          console.error("No match found for criterion:", criterion);
+          // If no match is found for a criterion, alert an error
+        }
+      }
+      if (matchedQuestions.length > 0) {
+        res.status(200).json({matchedQuestions,unmatchedCriteria});
+      } else {
+        res
+          .status(404)
+          .json({ message: "No questions found for the given criteria" });
+      }
+    })
+    .catch((error) => {
+      console.error("Error retrieving questions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    });
+};
 
 
 export const deleteQuestion = async (req, res) => {
