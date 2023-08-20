@@ -66,12 +66,10 @@ export const addQuestion = async (req, res) => {
           space
         } = req.body
 
-
-
         let imageSrc
-        // Access the uploaded image file
+
         if(req.file){
-           imageSrc = req.file.path
+           imageSrc = req.file.filename
         }else{
            imageSrc = "null"
         }
@@ -134,7 +132,8 @@ export const addQuestion = async (req, res) => {
 }   
 
 
-export const filterQuestion = async (req, res) => {
+
+export const filterQuestion = (req, res) => {
   const criteriaArray = req.body.criteria;
   const subject = req.body.subject
   console.log("\ncriteriaArray:", criteriaArray);
@@ -187,6 +186,7 @@ export const filterQuestion = async (req, res) => {
 };
 
 
+
 export const deleteQuestion = async (req, res) => {
     const questionId = req.params.id;
     try {
@@ -223,3 +223,9 @@ export const updateQuestion = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
 }   
+
+
+
+export const getImage = async (req, res) => {
+  res.download("../uploads/"+req.params.path)
+}

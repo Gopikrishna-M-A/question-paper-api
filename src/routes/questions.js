@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer'
 const router = express.Router();
-import { getQuestion, getAllQuestions, getQuestionsBySubject, addQuestion, filterQuestion, deleteQuestion, updateQuestion }  from '../controllers/questions.js';
+import { getQuestion, getAllQuestions, getQuestionsBySubject, addQuestion, getImage, filterQuestion, deleteQuestion, updateQuestion }  from '../controllers/questions.js';
 
 
 const storage = multer.diskStorage({
@@ -15,13 +15,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.get("/:id", getQuestion);
-router.get("/", getAllQuestions);
-router.get("/subject/:subject", getQuestionsBySubject);
-router.post("/", upload.single('image'), addQuestion);
-router.post("/filter",filterQuestion);
-router.delete("/:id", deleteQuestion);
-router.patch("/:id", updateQuestion);
+router.get("/:id", getQuestion)
+router.get("/", getAllQuestions)
+router.get("/subject/:subject", getQuestionsBySubject)
+router.post("/", upload.single('image'), addQuestion)
+router.post("/filter",filterQuestion)
+router.delete("/:id", deleteQuestion)
+router.patch("/:id", updateQuestion)
+router.get("/getImage/:path", getImage)
 
 
 
