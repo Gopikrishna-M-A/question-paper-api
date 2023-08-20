@@ -1,6 +1,11 @@
 import express from 'express';
 import Question from '../models/questionModel.js'
 import { shuffleArray } from '../utils/helper.js'
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 export const getQuestion = async (req, res) => {
@@ -227,6 +232,6 @@ export const updateQuestion = async (req, res) => {
 
 
 export const getImage = async (req, res) => {
-  res.download("../uploads/"+req.params.path)
-  // console.log("Current working directory:", process.cwd());
+  const uploadPath = path.resolve(__dirname, '..', '..', 'uploads');
+  res.download(uploadPath+"/"+req.params.path)
 }
