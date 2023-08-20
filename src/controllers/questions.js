@@ -227,5 +227,6 @@ export const updateQuestion = async (req, res) => {
 
 
 export const getImage = async (req, res) => {
-  res.download("../uploads/"+req.params.path)
+  // res.download("../uploads/"+req.params.path)
+  console.log("Current working directory:", process.cwd());
 }
