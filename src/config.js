@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import MongoDBSessionStore from 'connect-mongodb-session';
 dotenv.config({ path: '../.env' });
+
 
 const Pass_Key = process.env.PASS_KEY;
 const user_id = process.env.USER_ID;
@@ -15,4 +18,17 @@ mongoose.connect(DB_URI, {
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('MongoDB connection error:', error));
 
-export default mongoose.connection;
+
+
+  const MongoDBStore = MongoDBSessionStore(session);
+
+  const store = new MongoDBStore({
+    uri: DB_URI, // Use the same MongoDB URI
+    collection: 'sessions', // Collection name for sessions
+  });
+  
+  store.on('error', (error) => {
+    console.error('MongoDB Session Store Error:', error);
+  });
+
+ export { mongoose, store };

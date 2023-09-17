@@ -52,6 +52,7 @@ export const getQuestionsBySubject = async (req, res) => {
 
 
 export const addQuestion = async (req, res) => {
+  const userId = req.user.id;
     try {
         const {
           question,
@@ -80,6 +81,7 @@ export const addQuestion = async (req, res) => {
         }
 
         const dataToSave = {
+          userId,
           question,
           Dlevel,
           Clevel,
@@ -140,15 +142,19 @@ export const addQuestion = async (req, res) => {
 
 export const filterQuestion = (req, res) => {
   const criteriaArray = req.body.criteria;
-  const subject = req.body.subject
+  const subject = req.body.subject;
+  const userId = req.user._id; // Assuming you can access the user's ID in req.user
+
   console.log("\ncriteriaArray:", criteriaArray);
-  // Fetch all questions from the database
-  Question.find({subject})
+
+  // Fetch all questions from the database that match the user's ID
+  Question.find({ userId })
     .then((allQuestions) => {
       const view = shuffleArray([...allQuestions]); // Create a copy of all questions as the view
       const matchedQuestions = [];
       const unmatchedCriteria = [];
-      console.log("view",view);
+      console.log("view", view);
+
       // Iterate through the criteria array
       for (const criterion of criteriaArray) {
         const { section, mark, Dlevel, Clevel } = criterion;
@@ -156,6 +162,7 @@ export const filterQuestion = (req, res) => {
         // Find the first question that matches the criterion in the view
         const matchedQuestion = view.find((question) => {
           return (
+            question.subject === subject && // Filter by subject
             question.section === section &&
             question.mark == mark &&
             question.Dlevel === Dlevel &&
@@ -177,7 +184,7 @@ export const filterQuestion = (req, res) => {
         }
       }
       if (matchedQuestions.length > 0) {
-        res.status(200).json({matchedQuestions,unmatchedCriteria});
+        res.status(200).json({ matchedQuestions, unmatchedCriteria });
       } else {
         res
           .status(404)
@@ -189,6 +196,48 @@ export const filterQuestion = (req, res) => {
       res.status(500).json({ error: "Internal server error" });
     });
 };
+
+
+export const filterRandomQuestion = async(req,res)=> {
+  try {
+    const { difficult, easy, medium, subject } = req.body;
+    const userId = req.user._id; // Assuming you have a user object in the request
+
+    const selectedQuestions = [];
+
+    const userQuestions = await Question.find({ userId, subject })
+    const view = shuffleArray([...userQuestions]);
+
+    const counts = {
+      'Easy': easy,
+      'Moderate': medium,
+      'Difficult': difficult,
+    };
+
+    for (const [level, count] of Object.entries(counts)) {
+      // Filter questions of the current difficulty level
+      const levelQuestions = view.filter((question) => question.Dlevel === level);
+      if (levelQuestions.length < count) {
+        // If there are not enough questions of this difficulty level, send an error response
+        return res.status(400).json({ message: `Not enough ${level} questions available.` });
+      }
+      // Take the required number of questions for this difficulty level
+      for (let i = 0; i < count; i++) {
+        const questionIndex = view.indexOf(levelQuestions[i]);
+        if (questionIndex !== -1) {
+          const question = view.splice(questionIndex, 1)[0];
+          selectedQuestions.push(question);
+        }
+      }
+    }
+
+    // Send the shuffled selected questions as a response
+    res.status(200).json({ message: 'Questions filtered successfully!', matchedQuestions: selectedQuestions });
+  } catch (error) {
+    console.error('Error filtering questions:', error);
+    res.status(500).json({ message: 'An error occurred while filtering questions.' });
+  }
+}
 
 
 
